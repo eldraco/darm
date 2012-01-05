@@ -1,0 +1,5 @@
+
+Wed Jan 4, 10:39 PM GMT-3 (Leandro Tami)
+- Added dumpfile feature
+- Added basic command line parameter parsing
+- Replaced pylibcap with pcapy due to lack of certain necessary libpcap functions (e.g. dump_flush)

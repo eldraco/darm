@@ -80,7 +80,7 @@ class TCPLoom:
 			fh.write(thread['data'])
 			fh.close()
 		else:
-			Log.write("Dumping empty thread {0} {1}-{2}".format(thread['seq'], thread['src'], thread['dst']), 2)
+			Log.write("Discarding empty thread {0} {1}-{2}".format(thread['seq'], thread['src'], thread['dst']), 2)
 		
 	def addPacket(self, packet):
 		thread = self.__findThread(packet)
