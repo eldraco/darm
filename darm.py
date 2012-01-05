@@ -16,11 +16,11 @@ class darm:
 			self.__source.dumpfile = cfg['dumpfile']	
 
 		if cfg['method'] == "file":
-			print "Opening {0}".format(cfg['filename'])
+			print "Reading from '{0}', press Ctrl+C to stop".format(cfg['filename'])
 			self.__source.runFromFile(cfg['filename'])
 
 		elif cfg['method'] == "live":
-			print "Capturing live from {0}".format(cfg['interface'])
+			print "Capturing live from {0}, press Ctrl+C to stop".format(cfg['interface'])
 			self.__source.runLive(cfg['interface'])
 
 if __name__ == "__main__":

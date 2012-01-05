@@ -19,7 +19,6 @@ class TCPLoom:
 			idx = self.__index[t1]
 			return self.__threads[idx]
 		except:
-#			print "Could not find thread for packet {0}".format(t1)
 			return None
 	
 	def __openThread(self, packet):
@@ -45,42 +44,32 @@ class TCPLoom:
 
 		self.__fullCount += 1
 		self.__currentCount += 1
-#		print "Thread #{0} opened".format(idx) 
+		Log.write("New TCP thread (#{0})".format(idx),2) 
 		return thread		
 
 	def __closeThread(self, thread, state):		
-#		try:
-			if thread['state'] == 'open':
+		if thread['state'] == 'open':
+			if CommandLine().cfg['tcp_dumpthreads']:
 				self.__saveThread(thread)
-				thread['state'] = state		
-				thread['data'] = ""
-				self.__currentCount -= 1
-#		except:
-#			print "Error while closing thread! {0}".format(sys.exc_type)
-#			print "Thread: {0}".format(thread)
-#			sys.exit(-1)			
+			thread['state'] = state		
+			thread['data'] = ""
+			self.__currentCount -= 1
 		
 	def __appendToThread(self, thread, packet):
-#		try:
-			p = packet['payload']
-			if len(p)>0:
-				thread['data'] += p
-				thread['size'] += len(p)
-#		except:
-#			print "Error while appending to thread! {0}".format(sys.exc_type)
-#			print "Thread: {0}".format(thread)
-#			print "Conflicting packet: {0}".format(packet)
-#			sys.exit(-1)			
+		p = packet['payload']
+		if len(p)>0:
+			thread['data'] += p
+			thread['size'] += len(p)
 
 	def __saveThread(self, thread):
 		if thread['size']>0:
 			filename = "{0}-{1}.data".format(thread['src'], thread['dst'])
-			Log.write("Saving thread #{0} as {1} ({2} bytes)".format(thread['seq'], filename, thread['size']), 2)
+			Log.write("Dumping TCP thread #{0} as '{1}' ({2} bytes)".format(thread['seq'], filename, thread['size']), 2)
 			fh = open(filename,"wb")
 			fh.write(thread['data'])
 			fh.close()
 		else:
-			Log.write("Discarding empty thread {0} {1}-{2}".format(thread['seq'], thread['src'], thread['dst']), 2)
+			Log.write("Discarding empty TCP thread #{0} {1}-{2}".format(thread['seq'], thread['src'], thread['dst']), 2)
 		
 	def addPacket(self, packet):
 		thread = self.__findThread(packet)
@@ -92,13 +81,16 @@ class TCPLoom:
 
 		if "FA" in flags:
 			self.__closeThread(thread, "closed")
-			Log.write("Thread #{0} closed.".format(thread['seq']), 2)
+			Log.write("TCP thread #{0} closed.".format(thread['seq']), 2)
 		elif "R" in flags:
 			self.__closeThread(thread, "resetted")
-			Log.write("Thread #{0} resetted!".format(thread['seq']), 2)
+			Log.write("TCP thread #{0} resetted!".format(thread['seq']), 2)
 
 	def close(self):
 		for thread in self.__threads:
-			self.__closeThread(thread, "interrupted")		
-		self.__threads = None
+			if thread['state']=="open":
+				Log.write("TCP Thread #{0} capture interrupted!".format(thread['seq']), 2)
+				self.__closeThread(thread, "interrupted")		
+		print "{0} TCP threads analyzed".format(self.__fullCount)
+		del self.__threads
 

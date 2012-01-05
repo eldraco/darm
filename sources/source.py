@@ -69,15 +69,17 @@ class Source:
 				except socket.timeout:
 					pass
 				else:
-					packet_count += 1
-					apply(self.analyze_packet, packet)
-					if not dumper is None:
-						apply(dumper.dump, packet)
+					if not packet[0] is None:
+						packet_count += 1
+						apply(self.analyze_packet, packet)
+						if not dumper is None:
+							apply(dumper.dump, packet)
+					else:
+						break;
 		except KeyboardInterrupt:
 			pass
 
 		del reader
-		print "Stopped."
-		print '%d packets analyzed' % packet_count
+		print '\n%d packets analyzed' % packet_count
 		self.__unpacker.close()
 
