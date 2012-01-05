@@ -4,6 +4,7 @@ import time
 import socket
 import struct
 import binascii
+from common import *
 
 class Unpacker:
 
@@ -28,13 +29,13 @@ class Unpacker:
 	def relay(self, packet):
 		if len(self._unpackers)>0:
 			for unpacker in self._unpackers:
-#				print "{0} relaying to {1}".format(self, unpacker)
 				unpacker.addPacket(packet)
-#		else:
-#			s = []
-#			for key, value in packet[packet['top']].iteritems():
-#				s += ["{0} {1}".format(key, value)]
-#			print("#{0} {1} {2}".format(packet['raw']['seq'], packet['path'], ', '.join(s)))
+		else:
+			# outputs packet information
+			s = []
+			for key, value in packet[packet['top']].iteritems():
+				s += ["{0} {1}".format(key, value)]
+			Log.write("#{0} {1} {2}".format(packet['raw']['seq'], packet['path'], ', '.join(s)), 2)
 			
 	def addPacket(self, packet):
 		if self.validate(packet):

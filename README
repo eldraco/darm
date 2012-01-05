@@ -1,0 +1,9 @@
+darm - intelligent network sniffer for the masses
+
+darm is an attempt to create a very easy to use app that will sniff and report information about the activities happening on a live network. The main goal is to help the public to truly become aware about the extent of current network security. darm is being developed by Leandro Tami as a project for fun.
+
+Current features:
+
+- Sniffs live network interfaces or capture files and analyzes them, getting important protocol-specific information such as IP addresses and port numbers.
+- Supports ethernet, ip and tcp protocols
+- Reassembles tcp threads, and dumps them to files when they are closed (FIN or RST), or when darm is forced to close.

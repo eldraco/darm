@@ -75,12 +75,12 @@ class TCPLoom:
 	def __saveThread(self, thread):
 		if thread['size']>0:
 			filename = "{0}-{1}.data".format(thread['src'], thread['dst'])
-			print "Saving thread #{0} as {1} ({2} bytes)".format(thread['seq'], filename, thread['size'])
+			Log.write("Saving thread #{0} as {1} ({2} bytes)".format(thread['seq'], filename, thread['size']), 2)
 			fh = open(filename,"wb")
 			fh.write(thread['data'])
 			fh.close()
 		else:
-			print "Dumping empty thread {0} {1}-{2}".format(thread['seq'], thread['src'], thread['dst'])
+			Log.write("Dumping empty thread {0} {1}-{2}".format(thread['seq'], thread['src'], thread['dst']), 2)
 		
 	def addPacket(self, packet):
 		thread = self.__findThread(packet)
@@ -92,10 +92,10 @@ class TCPLoom:
 
 		if "FA" in flags:
 			self.__closeThread(thread, "closed")
-			print "Thread #{0} closed.".format(thread['seq'])		
+			Log.write("Thread #{0} closed.".format(thread['seq']), 2)
 		elif "R" in flags:
 			self.__closeThread(thread, "resetted")
-			print "Thread #{0} resetted!".format(thread['seq'])
+			Log.write("Thread #{0} resetted!".format(thread['seq']), 2)
 
 	def close(self):
 		for thread in self.__threads:

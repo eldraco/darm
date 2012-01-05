@@ -49,7 +49,7 @@ class Source:
 		try:
 			reader = pcapy.open_live(interface, 1600, 0, 100)
 		except:
-			print "You don't have permission to capture on this device."
+			print "Invalid interface or insufficient permissions."
 			sys.exit(-1)
 		else:
 			self.__run(reader)			
@@ -76,6 +76,7 @@ class Source:
 		except KeyboardInterrupt:
 			pass
 
+		del reader
 		print "Stopped."
 		print '%d packets analyzed' % packet_count
 		self.__unpacker.close()

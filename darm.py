@@ -3,23 +3,25 @@ from unpackers import *
 from sources import *
 from common import *
 
-class MainClass:
+class darm:
 
 	def __init__(self):
-		
-		options = CommandLine().options
-		source = Source()
-		source.setUnpacker(Tree().getRoot())
+		cfg = CommandLine().cfg
+		self.__source = Source()
+		self.__source.setUnpacker(Tree().getRoot())
 
-		if 'dumpfile' in options:
-			source.dumpfile = options['dumpfile']	
+	def run(self):	
+		cfg = CommandLine().cfg
+		if 'dumpfile' in cfg:
+			self.__source.dumpfile = cfg['dumpfile']	
 
-		if options['method'] == "file":
-			print "Opening {0}".format(options['filename'])
-			source.runFromFile(options['filename'])
-		elif options['method'] == "live":
-			print "Capturing live from {0}".format(options['interface'])
-			source.runLive(options['interface'])
+		if cfg['method'] == "file":
+			print "Opening {0}".format(cfg['filename'])
+			self.__source.runFromFile(cfg['filename'])
+
+		elif cfg['method'] == "live":
+			print "Capturing live from {0}".format(cfg['interface'])
+			self.__source.runLive(cfg['interface'])
 
 if __name__ == "__main__":
-	MainClass()
+	darm().run()
