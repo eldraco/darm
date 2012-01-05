@@ -1,0 +1,20 @@
+GET /_static/copybutton.js HTTP/1.1
+Host: docs.python.org
+Connection: keep-alive
+Cache-Control: max-age=0
+If-Modified-Since: Sun, 30 Oct 2011 15:59:07 GMT
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.63 Safari/535.7
+Accept: */*
+If-None-Match: "13cc873-997-4b08633bd68c0"
+Referer: http://docs.python.org/tutorial/errors.html
+Accept-Encoding: gzip,deflate,sdch
+Accept-Language: en-US,en;q=0.8
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3
+
+HTTP/1.1 304 Not Modified
+Date: Thu, 05 Jan 2012 00:45:08 GMT
+Server: Apache/2.2.16 (Debian)
+Connection: Keep-Alive
+Keep-Alive: timeout=15, max=100
+ETag: "13cc873-997-4b08633bd68c0"
+
