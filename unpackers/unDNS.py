@@ -46,11 +46,15 @@ class UnDNS (Unpacker):
 		RRttl = socket.ntohl(struct.unpack('I',p[idx+4:idx+8])[0])
 		RRdatalen = socket.ntohs(struct.unpack('H',p[idx+8:idx+10])[0])
 		idx += 10
-		RRdata = p[idx:idx+RRdatalen]
-		idx += RRdatalen
 
+		RRdata = p[idx:idx+RRdatalen]
 		if RRtype == 1:
+			# type A
 			RRdata = socket.inet_ntoa(RRdata)
+		elif RRtype == 5:
+			# type CNAME
+			RRdata = self.__getDomainString(idx, p)[1]
+		idx += RRdatalen
 
 		RRtype = self.__TYPES[RRtype-1]
 		RRclass = self.__CLASSES[RRclass-1]
@@ -106,6 +110,6 @@ class UnDNS (Unpacker):
 		packet['path'] += ".dns"
 		packet['dns'] = d
 		packet['payload'] = None
-
+		
 	def close(self):
 		Unpacker.close(self)
