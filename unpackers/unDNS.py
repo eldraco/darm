@@ -11,7 +11,7 @@ class UnDNS (Unpacker):
 	def __str__(self): 
 		return "DNS unpacker"
 
-	def __translateTTL(self, secs):
+	def __ttlToString(self, secs):
 		hours, secs = divmod(secs, 3600)
 		minutes, secs = divmod(secs, 60)
 		response = []
@@ -19,6 +19,54 @@ class UnDNS (Unpacker):
 		response += ["{0} minutes".format(minutes)] if minutes>0 else ""
 		response += ["{0} seconds".format(secs)] if secs>0 else ""
 		return ", ".join(response) if len(response)>0 else "None"
+
+	def __getDomainString(self, idx, p):
+		subdomains = []
+		c = ord(p[idx])
+		ptr = 0
+		while c>0:
+			if c & 0xC0:
+				if ptr==0:
+					ptr = idx
+				idx = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0]) & 0x3FFF
+				c = ord(p[idx])		
+			idx += 1
+			subdomains += [p[idx:idx+c]]
+			idx += c	
+			c = ord(p[idx])
+		
+		idx = ptr+2 if ptr>0 else idx+1
+		domain = ".".join(subdomains)
+		return (idx, domain)
+
+	def __getResourceRecord(self, idx, p):
+		idx, RRname = self.__getDomainString(idx, p)
+		RRtype = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0])
+		RRclass = socket.ntohs(struct.unpack('H',p[idx+2:idx+4])[0])
+		RRttl = socket.ntohl(struct.unpack('I',p[idx+4:idx+8])[0])
+		RRdatalen = socket.ntohs(struct.unpack('H',p[idx+8:idx+10])[0])
+		idx += 10
+		RRdata = p[idx:idx+RRdatalen]
+		idx += RRdatalen
+
+		if RRtype == 1:
+			RRdata = socket.inet_ntoa(RRdata)
+
+		RRtype = self.__TYPES[RRtype-1]
+		RRclass = self.__CLASSES[RRclass-1]
+		RRttl = self.__ttlToString(RRttl)
+		RR = { 'type': RRtype, 'class': RRclass, 'ttl': RRttl, 'data': RRdata }
+		return (idx, RR)
+
+	def __getQuestionRecord(self, idx, p):
+		idx, domain = self.__getDomainString(12, p)
+		qtype = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0])
+		qtype = self.__TYPES[qtype-1] if qtype<252 else self.__QTYPES[qtype-252]
+		qclass = socket.ntohs(struct.unpack('H',p[idx+2:idx+4])[0])
+		qclass = self.__CLASSES[qclass-1] if qclass<>255 else "*"
+		idx += 4
+		question = { 'domain': domain, 'type': qtype, 'class': qclass }
+		return (idx, question)
 
 	def validate(self, packet):
 		return (packet['udp']['dst'] == 53) or (packet['udp']['src'] == 53)
@@ -31,63 +79,28 @@ class UnDNS (Unpacker):
 
 		questionRRs = socket.ntohs(struct.unpack('H',p[4:6])[0])
 		answerRRs = socket.ntohs(struct.unpack('H',p[6:8])[0])
-		authRRs = socket.ntohs(struct.unpack('H',p[8:10])[0])
+		authorityRRs = socket.ntohs(struct.unpack('H',p[8:10])[0])
 		additionalRRs = socket.ntohs(struct.unpack('H',p[10:12])[0])
 
-		idx = 12
+		d['questions'] = []
 		for i in range(questionRRs):
-			# obtaining questions
-			subdomains = []
-			c = ord(p[idx])
-			while c>0:
-				idx += 1
-				subdomains += [p[idx:idx+c]]
-				idx += c	
-				c = ord(p[idx])
-			idx += 1
-			domains = ".".join(subdomains)
-			qtype = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0])
-			qtype = self.__TYPES[qtype-1] if qtype<252 else self.__QTYPES[qtype-252]
-			qclass = socket.ntohs(struct.unpack('H',p[idx+2:idx+4])[0])
-			qclass = self.__CLASSES[qclass-1] if qclass<>255 else "*"
-			print "\nDNS question {0}/{1} : {2}".format(i+1, questionRRs, (domains, qtype, qclass))
-			idx += 4
+			idx, question = self.__getQuestionRecord(12, p)
+			d['questions'] += [question]
 
+		d['answers'] = []
 		for i in range(answerRRs):
-			# obtaining answers
-			subdomains = []
-			c = ord(p[idx])
-			ptr = 0
-			while c>0:
-				if c & 0xC0:
-					if ptr==0:
-						ptr = idx
-					idx = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0]) & 0x3FFF
-					c = ord(p[idx])
-				
-				idx += 1
-				subdomains += [p[idx:idx+c]]
-				idx += c	
-				c = ord(p[idx])
-			
-			if ptr>0:
-				idx = ptr + 2
-			else:			
-				idx = idx + 1
+			idx, rr = self.__getResourceRecord(idx, p)
+			d['answers'] += [rr]			 			
 
-			RRname = ".".join(subdomains)
-			RRtype = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0])
-			RRtype = self.__TYPES[RRtype-1]
-			RRclass = socket.ntohs(struct.unpack('H',p[idx+2:idx+4])[0])
-			RRclass = self.__CLASSES[RRclass-1]
-			RRttl = socket.ntohl(struct.unpack('I',p[idx+4:idx+8])[0])
-			RRttl = self.__translateTTL(RRttl)
-			RRdatalen = socket.ntohs(struct.unpack('H',p[idx+8:idx+10])[0])
-			idx += 10
-			RRdata = p[idx:idx+RRdatalen]
-			idx += RRdatalen
-			print "DNS answer {0}/{1} : {2}".format(i+1, answerRRs, (RRname, RRtype, RRclass, RRttl, RRdata) )
-			 			
+		d['authority'] = []
+		for i in range(authorityRRs):
+			idx, rr = self.__getResourceRecord(idx, p)
+			d['authority'] += [rr]			 			
+
+		d['additional'] = []
+		for i in range(additionalRRs):
+			idx, rr = self.__getResourceRecord(idx, p)
+			d['additional'] += [rr]			 			
 	
 		packet['top'] = "dns"
 		packet['path'] += ".dns"
