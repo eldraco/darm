@@ -1,0 +1,101 @@
+from unpacker import *
+
+# info about DNS protocol in http://tools.ietf.org/html/rfc1035
+
+class UnDNS (Unpacker):
+
+	def __init__(self):
+		Unpacker.__init__(self)
+		self.__QUERY_TYPES = ['A','NS','MD','MF','CNAME','SOA','MB','MG','MR','NULL','WKS','PTR','HINFO','MINFO','MX','TXT']
+		self.__QUERY_CLASSES = ['IN','CS','CH','HS']
+
+	def __str__(self): 
+		return "DNS unpacker"
+
+	def validate(self, packet):
+		# this only evaluates dns requests
+		return (packet['udp']['dst'] == 53) or (packet['udp']['src'] == 53)
+
+	def __getRRs(self, p, count, idx, isQuestion):	
+		items = []
+		for i in range(count):
+			print "\nRR #{0}".format(i)
+			print "index is {0}".format(idx)
+			subdomains = []
+			subdomain_length = ord(p[idx])
+			ptr = 0
+			while subdomain_length>0:
+
+				if ord(p[idx])&0xC0==0xC0:
+					# it's a pointer!
+					ptr = idx + 2
+					idx = (socket.ntohs(struct.unpack('H',p[idx:idx+2])[0]) & 0x3FFF)
+					print "Following pointer to {0}, saving current idx + 2 = {1} to ptr".format(idx, ptr)
+				else:
+					# it's the length of the subdomain string
+					idx += 1
+					print "Not a pointer, copying {0} chars from pos {1}.".format(subdomain_length, idx)
+					subdomains += [p[idx:idx+subdomain_length]]
+					print "Copying subdomain name: {0}".format(subdomains)
+					idx += subdomain_length
+				subdomain_length = ord(p[idx])
+
+				if subdomain_length==0 and ptr>0:
+					print "jumping back to {0}".format(ptr)
+					idx = ptr
+					subdomain_length = ord(p[idx])
+				
+			#idx += 1
+			qtype = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0])
+			qclass = socket.ntohs(struct.unpack('H',p[idx+2:idx+4])[0])
+			print "qtype: {0}, qclass: {1}".format(qtype, qclass)			
+
+			item = {}
+			item['domain'] = ".".join(subdomains)
+			item['query-type'] = self.__QUERY_TYPES[qtype-1] if qtype>0 and qtype<16 else qtype
+			item['query-class'] = '*' if qclass==0x00FF else (self.__QUERY_CLASSES[qclass-1] if qclass>0 and qclass<5 else qclass)
+			if not isQuestion:
+				#print "ttl len {0}".format(len(p[idx+4:idx+8]))
+				#print struct.unpack('I',p[idx+4:idx+8])[0]
+				ttl = item['ttl'] = socket.ntohl(struct.unpack('I',p[idx+4:idx+8])[0])
+				rrlen = item['rdata-length'] = socket.ntohs(struct.unpack('H',p[idx+8:idx+10])[0])
+				rrdata = item['rdata'] = p[idx+10:idx+10+item['rdata-length']]
+				print "is question: ttl {0}, data len {1}".format(ttl, rrlen)
+				idx += 8 + item['rdata-length']
+			else:
+				idx += 4
+			items += [item]
+		return (idx, items)
+	
+	def process(self, packet):
+		p = packet['payload']
+		d={}
+		d['transaction-id'] = socket.ntohs(struct.unpack('H',p[0:2])[0])
+		d['flags'] = socket.ntohs(struct.unpack('H',p[2:4])[0])
+		questionRRs = d['questions-count'] = socket.ntohs(struct.unpack('H',p[4:6])[0])
+		answerRRs = d['answers-count'] = socket.ntohs(struct.unpack('H',p[6:8])[0])
+		authRRs = d['authority-count'] = socket.ntohs(struct.unpack('H',p[8:10])[0])
+		additionalRRs = d['additional-count'] = socket.ntohs(struct.unpack('H',p[10:12])[0])
+		print "\nThis DNS packet has {0} questions, {1} answers, {2} authority RRs and {3} additional RRs".format(questionRRs, answerRRs, authRRs, additionalRRs)		
+
+		idx = 12	
+		if d['questions-count']>0:
+			print "------------ Questions ------------"
+			data = self.__getRRs(p, d['questions-count'], 12, True)
+			idx = data[0]
+			d['questions'] = data[1] 
+
+		print "idx is {0}".format(idx)
+		if d['answers-count']>0:
+			print "------------ Answers ------------"
+			data = self.__getRRs(p, d['answers-count'], idx+1, False)
+			idx = data[0]
+			d['answers'] = qdata[1]
+
+		packet['top'] = "dns"
+		packet['path'] += ".dns"
+		packet['dns'] = d
+		packet['payload'] = None
+
+	def close(self):
+		Unpacker.close(self)
