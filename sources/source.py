@@ -60,7 +60,6 @@ class Source:
 			print "Dumping output to {0}".format(self.dumpfile)
 			dumper = reader.dump_open(self.dumpfile)
 
-		print "Press Ctrl+C to stop"
 		packet_count = 0
 		try:
 			while 1:

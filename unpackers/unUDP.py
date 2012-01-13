@@ -9,7 +9,12 @@ class UnUDP (Unpacker):
 		return "UDP unpacker"
 
 	def validate(self, packet):
-		return packet['ip']['protocol'] == socket.IPPROTO_UDP
+		isValid = False
+		try:
+			isValid = packet['ip']['protocol'] == socket.IPPROTO_UDP
+		except:
+			pass
+		return isValid
 
 	def process(self, packet):
 		p = packet['payload']

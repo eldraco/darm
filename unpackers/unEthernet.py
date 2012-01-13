@@ -9,7 +9,15 @@ class UnEthernet (Unpacker):
 		return "Ethernet unpacker"
 
 	def validate(self, packet):
-		return packet['payload'][26:28]!='\xAA\xAA'
+		isValid = False
+		try:
+			# find out a way to properly identify ethernet frames
+			p = packet['payload']
+			seg = p[26:28]
+			isValid = (len(seg)==2) and (seg!='\xAA\xAA')
+		except:
+			pass
+		return isValid
 
 	def process(self, packet):
 		p = packet['payload']

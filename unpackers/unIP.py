@@ -9,7 +9,12 @@ class UnIP (Unpacker):
 		return "IP unpacker"
 
 	def validate(self, packet):
-		return packet[packet['top']]['protocol'] == 0x0800
+		isValid = False
+		try:
+			isValid = packet[packet['top']]['protocol'] == 0x0800
+		except:
+			pass
+		return isValid
 
 	def process(self, packet):
 		p = packet['payload']

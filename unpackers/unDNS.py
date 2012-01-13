@@ -73,7 +73,12 @@ class UnDNS (Unpacker):
 		return (idx, question)
 
 	def validate(self, packet):
-		return (packet['udp']['dst'] == 53) or (packet['udp']['src'] == 53)
+		isValid = False
+		try:
+			isValid = (packet['udp']['dst'] == 53) or (packet['udp']['src'] == 53)
+		except:
+			pass
+		return isValid
 
 	def process(self, packet):
 		p = packet['payload']

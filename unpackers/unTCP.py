@@ -11,7 +11,12 @@ class UnTCP (Unpacker):
 		return "TCP unpacker"
 
 	def validate(self, packet):
-		return packet['ip']['protocol'] == socket.IPPROTO_TCP
+		isValid = False
+		try:
+			isValid = packet['ip']['protocol'] == socket.IPPROTO_TCP
+		except:
+			pass
+		return isValid
 
 	def __updatePacketInfo(self, packet):
 		p = packet['payload']
