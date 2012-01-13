@@ -1,5 +1,6 @@
 import sys
 import socket
+import time
 try:
 	import pcapy
 except:
@@ -60,6 +61,7 @@ class Source:
 			print "Dumping output to {0}".format(self.dumpfile)
 			dumper = reader.dump_open(self.dumpfile)
 
+		totalTime = time.time()
 		packet_count = 0
 		try:
 			while 1:
@@ -79,6 +81,7 @@ class Source:
 			pass
 
 		del reader
-		print '\n%d packets analyzed' % packet_count
+		totalTime = time.time() - totalTime
+		print '\n%d packets analyzed in %.3f secs (%f pp)' % (packet_count, totalTime, totalTime/packet_count)
 		self.__unpacker.close()
 

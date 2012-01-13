@@ -5,5 +5,5 @@ darm is an attempt to create a very easy to use app that will sniff and report i
 Current features:
 
 - Sniffs live network interfaces or capture files and analyzes them, getting important protocol-specific information such as IP addresses and port numbers.
-- Supports ethernet, ip and tcp protocols
+- Supports Ethernet, 802.11, IP, ARP, UDP, TCP and DNS protocols
 - Reassembles tcp threads, and dumps them to files when they are closed (FIN or RST), or when darm is forced to close.
