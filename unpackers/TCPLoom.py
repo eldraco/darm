@@ -1,5 +1,6 @@
 import sys
 from common import *
+from analyzers import *
 
 class TCPLoom:
 	
@@ -57,9 +58,11 @@ class TCPLoom:
 		
 	def __appendToThread(self, thread, packet):
 		p = packet['payload']
-		if len(p)>0:
+		plen = len(p)
+		if plen>0:
 			thread['data'] += p
-			thread['size'] += len(p)
+			thread['size'] += plen
+			TCPAnalyzers().analyzeData(thread)
 
 	def __saveThread(self, thread):
 		if thread['size']>0:
@@ -79,7 +82,7 @@ class TCPLoom:
 		flags = packet['tcp']['flags']
 		self.__appendToThread(thread, packet)
 
-		if "FA" in flags:
+		if ("F" in flags) and ("A" in flags):
 			self.__closeThread(thread, "closed")
 			Log.write("TCP thread #{0} closed.".format(thread['seq']), 2)
 		elif "R" in flags:

@@ -31,7 +31,7 @@ class UnTCP (Unpacker):
 		if flagsValue & 0x01: flags += "F"
 		if flagsValue & 0x02: flags += "S"
 		if flagsValue & 0x04: flags += "R"
-#		if flagsValue & 0x08: flags += "P"
+		if flagsValue & 0x08: flags += "P"
 		if flagsValue & 0x10: flags += "A"
 		packet['tcp']['flags'] = flags
 
