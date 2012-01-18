@@ -3,11 +3,11 @@ import re
 class Analyzer:
 
 	def __init__(self, thread):
-		self.__thread = thread
+		self._thread = thread
 		self.__cursor = 0
 
 	def _readUntil(self, pattern):
-		data = self.__thread['data']
+		data = self._thread['data']
 		pos = data.find(pattern, self.__cursor)
 		if (pos<0):
 			return None
@@ -20,14 +20,14 @@ class Analyzer:
 		return self._readUntil("\x0D\x0A")
 
 	def _read(self):
-		data = self.__thread['data']
+		data = self._thread['data']
 		c = self.__cursor
 		self.__cursor = len(data)-1
 		return data[c:]
 
 	def _read(self, count):
 #		print "reading {0} bytes, cursor is in position {1}".format(count, self.__cursor)
-		data = self.__thread['data']
+		data = self._thread['data']
 		c = self.__cursor
 		r = len(data)-c
 		if r<count:

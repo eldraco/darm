@@ -36,8 +36,8 @@ class TCPLoom:
 
 		thread = {}
 		thread['data'] = ""
-		thread['src'] = "{0}({1})".format(src_ip, KnownPorts().tcp(src_port))
-		thread['dst'] = "{0}({1})".format(dst_ip, KnownPorts().tcp(dst_port))
+		thread['src'] = src_ip #"{0}({1})".format(src_ip, KnownPorts().tcp(src_port))
+		thread['dst'] = dst_ip #"{0}({1})".format(dst_ip, KnownPorts().tcp(dst_port))
 		thread['state'] = 'open'
 		thread['size'] = 0		
 		thread['seq'] = self.__fullCount		 

@@ -1,4 +1,5 @@
 from analyzer import *
+from reporters import *
 
 AnHTTP_stSearchingMarkers = 0
 AnHTTP_stReadingRequestHeaders = 1
@@ -30,10 +31,9 @@ class AnHTTP (Analyzer):
 		self.response = None
 
 	def __completed(self):
-		print "\n--- HTTP analysis complete - Data dump ---"
-		print "REQUEST: {0}\n".format(self.request)
-		print "RESPONSE: {0}\n".format(self.response)
-		print "---\n"
+		src = self._thread['src']
+		dst = self._thread['dst']
+		HTTPReporter().report(src, dst, self.request, self.response)
 		self.__reset()
 
 	def __stateSearchingMarkers(self):
@@ -76,7 +76,7 @@ class AnHTTP (Analyzer):
 			else:
 #				print "no more request headers!"
 				if ('Content-Length' in self.request['headers']) and (int(self.request['headers']['Content-Length'])>0):
-					print "this request carries content - move to content reading state"
+#					print "this request carries content - move to content reading state"
 					self.__state = AnHTTP_stReadingRequestContent 
 					return True
 
@@ -117,7 +117,7 @@ class AnHTTP (Analyzer):
 			else:
 #				print "no more response headers!"
 				if ('Content-Length' in self.response['headers']) and (int(self.response['headers']['Content-Length'])>0):
-					print "this response carries content - move to content reading state"
+#					print "this response carries content - move to content reading state"
 					self.__state = AnHTTP_stReadingResponseContent
 					return True
 				else:
@@ -143,5 +143,6 @@ class AnHTTP (Analyzer):
 			return False
 
 	def close(self):
-		print "Closing HTTP analyzer"
+#		print "Closing HTTP analyzer"
+		pass
 
