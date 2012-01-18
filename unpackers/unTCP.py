@@ -25,6 +25,7 @@ class UnTCP (Unpacker):
 		packet['tcp'] = {}
 		packet['tcp']['src'] = socket.ntohs(struct.unpack('H',p[0:2])[0])
 		packet['tcp']['dst'] = socket.ntohs(struct.unpack('H',p[2:4])[0])
+#		packet['tcp']['seq'] = socket.ntohl(struct.unpack('I',p[4:8])[0])
 
 		flagsValue = ord(p[13])
 		flags = ""

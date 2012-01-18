@@ -26,4 +26,10 @@ except:
 				self.__threadAnalyzers[seq] = self.__createAnalyzers(thread)
 			self.__sendDataToAnalyzers(thread)
 
+		def closeAnalyzers(self, thread):
+			seq = thread['seq']
+			if seq in self.__threadAnalyzers:
+				for analyzer in self.__threadAnalyzers[seq]:			
+					analyzer.close()
+
 	TCPAnalyzers = TCPAnalyzers()

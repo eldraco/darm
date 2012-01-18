@@ -50,8 +50,12 @@ class TCPLoom:
 
 	def __closeThread(self, thread, state):		
 		if thread['state'] == 'open':
+			# dump thread content to file if user requested it
 			if CommandLine().cfg['tcp_dumpthreads']:
 				self.__saveThread(thread)
+			# close analyzer if there's one
+			TCPAnalyzers().closeAnalyzers(thread)
+			# change state and delete data from memory
 			thread['state'] = state		
 			thread['data'] = ""
 			self.__currentCount -= 1

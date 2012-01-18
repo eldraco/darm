@@ -1,73 +1,147 @@
-import re
 from analyzer import *
 
-AnHTTP_stUnknown = 0
-AnHTTP_stRequest = 1
-AnHTTP_stResponse = 2
+AnHTTP_stSearchingMarkers = 0
+AnHTTP_stReadingRequestHeaders = 1
+AnHTTP_stReadingRequestContent = 2
+AnHTTP_stReadingResponseHeaders = 3
+AnHTTP_stReadingResponseContent = 4
 
-AnHTTP_reRequestAction = r"^(GET|POST) .* HTTP/1.1$"
-AnHTTP_reResponseAction = r"^HTTP/1.1 [0-9]{3}"
+AnHTTP_reRequestMarker = r"^(GET|POST) .* HTTP/1.1$"
+AnHTTP_reResponseMarker = r"^HTTP/1.1 [0-9]{3}"
 
 class AnHTTP (Analyzer):
 
 	def __init__(self, thread):
 		Analyzer.__init__(self, thread)
-		self.__state = AnHTTP_stUnknown
+		self.__reset()
+		self.__stateHandlers = [self.__stateSearchingMarkers, 
+								self.__stateReadingRequestHeaders, 
+								self.__stateReadingRequestContent, 
+								self.__stateReadingResponseHeaders, 
+								self.__stateReadingResponseContent]
 
-		self.request = {}
-		self.request['headers'] = {}
+	def analyzeData(self):
+		while self.__stateHandlers[self.__state](): 
+			pass
 
-		self.response = {}
-		self.response['headers'] = {}
+	def __reset(self):
+		self.__state = AnHTTP_stSearchingMarkers
+		self.request = None
+		self.response = None
 
-	def __test(self, pattern, regstr):
-		regex = re.compile(regstr)
-		return False if regex.search(pattern) is None else True 
+	def __completed(self):
+		print "\n--- HTTP analysis complete - Data dump ---"
+		print "REQUEST: {0}\n".format(self.request)
+		print "RESPONSE: {0}\n".format(self.response)
+		print "---\n"
+		self.__reset()
 
-	def analyzeData(self):		
+	def __stateSearchingMarkers(self):
+#		print "searching markers"
 		line = self._readln()
 		while not line is None:
-			self.__analyzeLine(line)
+			if self._eval(line, AnHTTP_reRequestMarker):
+#				print "request marker found"
+				self.request = {}
+				self.request['headers'] = {}
+				bs = line.find(" ")+1
+				self.request['url'] = line[bs:line.find(" ", bs)]	
+				self.__state = AnHTTP_stReadingRequestHeaders
+				return True
+
+			elif self._eval(line, AnHTTP_reResponseMarker):
+#				print "response marker found"
+				self.response = {}
+				self.response['headers'] = {}
+				bs = line.find(" ")+1
+				self.response['statuscode'] = line[bs:line.find(" ", bs)]	
+				self.__state = AnHTTP_stReadingResponseHeaders
+				return True
+
 			line = self._readln()
+#		print "not enough data, will have to wait to next packet"
+		return False
 
-	def __analyzeLine(self, line):
-
-		if self.__state == AnHTTP_stUnknown:		
-
-			if self.__test(line, AnHTTP_reRequestAction):
-				print "-------------\nREQUEST: {0}\n".format(line)
-				self.__state = AnHTTP_stRequest 
-
-			elif self.__test(line, AnHTTP_reResponseAction):
-				print "-------------\nRESPONSE: {0}".format(line)
-				self.__state = AnHTTP_stResponse 
-				
-		elif self.__state == AnHTTP_stRequest:
-			
+	def __stateReadingRequestHeaders(self):
+#		print "reading request headers"
+		line = self._readln()
+		while not line is None:
 			if line!="":
+#				print "found new request header {0}".format(line)
 				cpos = line.find(":")
 				if cpos>0:
 					self.request['headers'][line[:cpos]] = line[cpos+1:].strip()
+#				else:
+#					print "found something unexpected (not a request header!)"
 			else:
-				#print self.request
-				self.__state = AnHTTP_stUnknown
+#				print "no more request headers!"
+				if ('Content-Length' in self.request['headers']) and (int(self.request['headers']['Content-Length'])>0):
+					print "this request carries content - move to content reading state"
+					self.__state = AnHTTP_stReadingRequestContent 
+					return True
 
-		elif self.__state == AnHTTP_stResponse:
+				else:
+#					print "request without extra content, move to searching markers"
+					self.request['content'] = None
+					self.__state = AnHTTP_stSearchingMarkers
+					return True
+			line = self._readln()
+#		print "not enough data, will have to wait to next packet"
+		return False
 
+	def __stateReadingRequestContent(self):
+#		print "trying to read request content"
+		count = int(self.request['headers']['Content-Length'])	
+		data = self._read(count)
+		if not data is None:
+#			print "request content obtained, moving to next state"
+			self.request['content'] = data
+			self.__state = AnHTTP_stSearchingMarkers
+			return True
+		else:
+#			print "not enough data, will have to wait to next packet"
+			return False
+			
+
+	def __stateReadingResponseHeaders(self):
+#		print "reading response headers"
+		line = self._readln()
+		while not line is None:
 			if line!="":
+#				print "found new response header {0}".format(line)
 				cpos = line.find(":")
 				if cpos>0:
 					self.response['headers'][line[:cpos]] = line[cpos+1:].strip()
+#				else:
+#					print "found something unexpected (not a response header!): {0}".format(line)
 			else:
-				headers = self.response['headers']
-				#print "arrived to response end of line"
-				if 'Content-Length' in headers:
-					content_length = int(headers['Content-Length'])
-					if content_length>0:
-						self.response['content'] = self._read(content_length)
-						print "Just read some content!:", self.response['content']
-				#else:
-				#	print "No content length in headers"
-				#print self.response
-				self.__state = AnHTTP_stUnknown
-			
+#				print "no more response headers!"
+				if ('Content-Length' in self.response['headers']) and (int(self.response['headers']['Content-Length'])>0):
+					print "this response carries content - move to content reading state"
+					self.__state = AnHTTP_stReadingResponseContent
+					return True
+				else:
+#					print "response without extra content, move to searching markers"
+					self.response['content'] = None
+					self.__completed()
+					return True
+			line = self._readln()
+#		print "not enough data, will have to wait to next packet"
+		return False
+	
+	def __stateReadingResponseContent(self):
+#		print "trying to read response content"
+		count = int(self.response['headers']['Content-Length'])	
+		data = self._read(count)
+		if not data is None:
+#			print "response content obtained, searching new markers"
+			self.response['content'] = data
+			self.__completed()
+			return True
+		else:
+#			print "not enough data, will have to wait to next packet"
+			return False
+
+	def close(self):
+		print "Closing HTTP analyzer"
+
