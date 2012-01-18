@@ -63,6 +63,12 @@ class Source:
 
 		totalTime = time.time()
 		packet_count = 0
+		byteCount = 0
+
+		lastNotificationTime = time.time()
+		lastPacketCount = 0
+		lastByteCount = 0
+		timeThreshold = 5
 		try:
 			while 1:
 				try:
@@ -75,8 +81,18 @@ class Source:
 						apply(self.analyze_packet, packet)
 						if not dumper is None:
 							apply(dumper.dump, packet)
+						byteCount += packet[0].getcaplen()
 					else:
 						break;
+
+				if time.time()-lastNotificationTime>timeThreshold:
+					pps = float(packet_count-lastPacketCount) / timeThreshold
+					KBps = float((byteCount-lastByteCount) / timeThreshold) / 1024
+					print("Analyzing packets (%.2f pps, %.2f KB/s)..." % (pps, KBps))
+					lastNotificationTime = time.time()
+					lastPacketCount = packet_count
+					lastByteCount = byteCount
+
 		except KeyboardInterrupt:
 			pass
 

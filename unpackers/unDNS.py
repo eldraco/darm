@@ -6,6 +6,7 @@ class UnDNS (Unpacker):
 		Unpacker.__init__(self)
 		self.__TYPES = ['A','NS','MD','MF','CNAME','SOA','MB','MG','MR','NULL','WKS','PTR','HINFO','MINFO','MX','TXT']
 		self.__QTYPES = ['AXFR', 'MAILB', 'MAILA', '*']
+		self.__EXTTYPES = ['AAAA']
 		self.__CLASSES = ['IN','CS','CH','HS']
 
 	def __str__(self): 
@@ -65,7 +66,13 @@ class UnDNS (Unpacker):
 	def __getQuestionRecord(self, idx, p):
 		idx, domain = self.__getDomainString(12, p)
 		qtype = socket.ntohs(struct.unpack('H',p[idx:idx+2])[0])
-		qtype = self.__TYPES[qtype-1] if qtype<252 else self.__QTYPES[qtype-252]
+		if qtype<0x001C:
+			qtype = self.__TYPES[qtype-1]
+		elif qtype<252: 
+			qtype = self.__EXTTYPES[qtype-0x001C]  
+		else:
+			qtype = self.__QTYPES[qtype-252]
+
 		qclass = socket.ntohs(struct.unpack('H',p[idx+2:idx+4])[0])
 		qclass = self.__CLASSES[qclass-1] if qclass<>255 else "*"
 		idx += 4
