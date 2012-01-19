@@ -1,4 +1,5 @@
 from unpacker import *
+from reporters import *
 
 class UnDNS (Unpacker):
 
@@ -92,6 +93,7 @@ class UnDNS (Unpacker):
 		d={}
 		d['transaction-id'] = socket.ntohs(struct.unpack('H',p[0:2])[0])
 		d['flags'] = socket.ntohs(struct.unpack('H',p[2:4])[0])
+		d['type'] = "response" if d['flags'] & 0x8000 else "query"
 
 		questionRRs = socket.ntohs(struct.unpack('H',p[4:6])[0])
 		answerRRs = socket.ntohs(struct.unpack('H',p[6:8])[0])
@@ -122,6 +124,9 @@ class UnDNS (Unpacker):
 		packet['path'] += ".dns"
 		packet['dns'] = d
 		packet['payload'] = None
-		
+
+		DNSReporter().report(packet)
+				
 	def close(self):
 		Unpacker.close(self)
+
