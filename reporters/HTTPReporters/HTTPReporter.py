@@ -15,8 +15,8 @@ except:
 								BrowserReporter()]
 
 		def report(self, src, dst, request, response):
-
-			for reporter in self.__reporters:
-				apply(reporter.report, (src, dst, request, response)) 
+			if self._validate():
+				for reporter in self.__reporters:
+					apply(reporter.report, (src, dst, request, response)) 
 
 HTTPReporter = HTTPReporter()

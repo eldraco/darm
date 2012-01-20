@@ -1,4 +1,5 @@
 import urllib
+from common import *
 
 class Reporter:
 
@@ -7,3 +8,6 @@ class Reporter:
 
 	def _urldecode(self, str):
 		return urllib.unquote(str).replace("+", " ")
+
+	def _validate(self):
+		return CommandLine().cfg['reporters_enabled']

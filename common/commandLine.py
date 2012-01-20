@@ -40,6 +40,7 @@ except:
 			self.cfg = {}
 			self.cfg['verbosity'] = 1
 			self.cfg['tcp_dumpthreads'] = False
+			self.cfg['reporters_enabled'] = False
 
 		def __setArgument(self, arg):
 			if arg[0]=="-i":
@@ -57,6 +58,9 @@ except:
 
 			elif arg[0]=="-t":
 				self.cfg['tcp_dumpthreads'] = True
+
+			elif arg[0]=="-a":
+				self.cfg['reporters_enabled'] = True
 
 			elif arg[0]=="-v":
 				try:
@@ -84,6 +88,7 @@ except:
 			print "  -w (filename)    dump filename"
 			print "  -t               save TCP threads to folder"
 			print " VERBOSITY: how much detail you want about ongoing tasks."
+			print "  -a               report current computer activity in layman's terms"
 			print "  -v (level)       verbosity level number. Must be between 0 and 2. Default is 1."
 			sys.exit(-1)
 

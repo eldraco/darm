@@ -31,17 +31,20 @@ except:
 					return match.group(0)
 			return None
 
+		def _validate(self, request):
+			valid = Reporter._validate(self) and (not request is None) and ('User-Agent' in request['headers'])
+			return valid
+
 		def report(self, src, dst, request, response):
-			if not request is None:
-				if 'User-Agent' in request['headers']:
-					agent = request['headers']['User-Agent']
-					browser = self._agentToBrowser(agent)
-					if not browser is None:
-						if not src in self.__knownBrowsers:
-							self.__knownBrowsers[src] = []
-						if not browser in self.__knownBrowsers[src]:
-							print "{0} is using {1}".format(src, browser) 
-							self.__knownBrowsers[src] += [browser]
+			if self._validate(request):
+				agent = request['headers']['User-Agent']
+				browser = self._agentToBrowser(agent)
+				if not browser is None:
+					if not src in self.__knownBrowsers:
+						self.__knownBrowsers[src] = []
+					if not browser in self.__knownBrowsers[src]:
+						print "{0} is using {1}".format(src, browser) 
+						self.__knownBrowsers[src] += [browser]
 #					else:
 #						print "Unknown user agent: {0}".format(agent)
 
