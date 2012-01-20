@@ -41,6 +41,7 @@ except:
 			self.cfg['verbosity'] = 1
 			self.cfg['tcp_dumpthreads'] = False
 			self.cfg['reporters_enabled'] = False
+			self.cfg['http_export_files'] = False
 
 		def __setArgument(self, arg):
 			if arg[0]=="-i":
@@ -61,6 +62,9 @@ except:
 
 			elif arg[0]=="-a":
 				self.cfg['reporters_enabled'] = True
+
+			elif arg[0]=="-f":
+				self.cfg['http_export_files'] = True
 
 			elif arg[0]=="-v":
 				try:
@@ -87,6 +91,7 @@ except:
 			print " OUTPUT: Dump input data to capture file."
 			print "  -w (filename)    dump filename"
 			print "  -t               save TCP threads to folder"
+			print "  -f               dump files transferred via HTTP to current folder"
 			print " VERBOSITY: how much detail you want about ongoing tasks."
 			print "  -a               report current computer activity in layman's terms"
 			print "  -v (level)       verbosity level number. Must be between 0 and 2. Default is 1."

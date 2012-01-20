@@ -1,5 +1,8 @@
 from analyzer import *
 from reporters import *
+from common import *
+import os
+import random
 
 AnHTTP_stSearchingMarkers = 0
 AnHTTP_stReadingRequestHeaders = 1
@@ -30,9 +33,46 @@ class AnHTTP (Analyzer):
 		self.request = None
 		self.response = None
 
+	def _exportResponseToFile(self):
+
+		content = self.response['content']
+		if not content is None:
+
+			if not self.request is None:
+				host = self.request['headers']['Host']
+				filename = self.request['url'][1:].replace("/",".")
+			else:
+				host = "unknown_host"
+				filename = "file%06d" % int(random.random()*100000)
+
+			path = "httpfiles/" + host 
+			try:
+				os.makedirs(path)
+			except:
+				pass
+
+			try:
+				if filename == "":
+					filename = "file"
+				print "Saving to ", path+"/"+filename
+				f = open(path+"/"+filename,"wb")
+				f.write(content)
+				f.close()
+			except:
+				print "Could not save file!"
+
 	def __completed(self):
 		src = self._thread['src']
 		dst = self._thread['dst']
+
+		h = self.response['headers']
+		if 'Content-Type' in h:
+			ct = h['Content-Type']
+			if CommandLine().cfg['http_export_files']:
+				self._exportResponseToFile()
+			
+			#print "Content-Type: {0}".format(ct)
+
 		HTTPReporter().report(src, dst, self.request, self.response)
 		self.__reset()
 
