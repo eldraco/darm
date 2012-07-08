@@ -1,5 +1,6 @@
 from reporters.reporter import *
 import time
+import re
 
 try: DNSReporter
 except:
@@ -8,6 +9,12 @@ except:
 
 		def __init__(self):
 			self.__queries = {}
+			
+			self.__ignoredDomains = []
+			self.__importantDomains = ["(.)*(facebook|fbcdn)\.(com|net)",
+									   "(.)*google\.com",
+									   "(.)*hotmail\.com",
+									   "(.)*yahoo\.com",]
 
 		def __call__(self):
 			return self
@@ -31,6 +38,13 @@ except:
 			text = "({2}) {0} is asking the IP address of {1}".format(who,what,when)
 			Log.write(text, 2)
 
+		def __isDomainImportant(self, domain):
+			for exp in self.__importantDomains:
+				regex = re.compile(exp)
+				match = regex.search(domain)
+				if match:
+					return True
+			return False
 
 		def report(self, packet):
 			if self._validate(packet):
@@ -52,11 +66,14 @@ except:
 					Log.write("[+] {}  ({} DNS Requests)".format(key,q[key]["count"]),1)
 					total = total + q[key]["count"]
 					for domain in q[key]["what"]:
-						Log.write("  - {}".format(domain),1)
+						Log.write("  - {0}".format(domain), 
+								verbosity=1, 
+								important=self.__isDomainImportant(domain) )
 						
 				Log.write("\n[+] Total IP address: {}".format(len(q.keys())),1)
 				Log.write("[+] Total requests: {}".format(total),1)
 				Log.write("\n-- End DNS Summary",1)					
 
 
-	DNSReporter = DNSReporter()	
+DNSReporter = DNSReporter()
+		
