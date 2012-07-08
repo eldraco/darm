@@ -7,7 +7,7 @@ except:
 	class DNSReporter (Reporter):
 
 		def __init__(self):
-			self.__domains = []
+			self.__queries = {}
 
 		def __call__(self):
 			return self
@@ -19,6 +19,14 @@ except:
 			return valid
 
 		def __addDomainRequestEntry(self, who, when, what):
+			
+			q = self.__queries
+			if not who in q:
+				q[who] = { "count": 1, "what": [what] }
+			else:
+				q[who]["count"] += 1
+				if not what in q[who]["what"]: 
+					q[who]["what"].append(what)
 			
 			text = "({2}) {0} is asking the IP address of {1}".format(who,what,when)
 			Log.write(text, 2)
@@ -36,6 +44,19 @@ except:
 					
 
 		def summaryReport(self):
-			return ""
+			total = 0
+			q = self.__queries
+			if len(q)>0:
+				Log.write("[+] DNS Summary:",1)
+				for key in q.keys():
+					Log.write("[+] {}  ({} DNS Requests)".format(key,q[key]["count"]),1)
+					total = total + q[key]["count"]
+					for domain in q[key]["what"]:
+						Log.write("  - {}".format(domain),1)
+						
+				Log.write("\n[+] Total IP address: {}".format(len(q.keys())),1)
+				Log.write("[+] Total requests: {}".format(total),1)
+				Log.write("\n-- End DNS Summary",1)					
+
 
 	DNSReporter = DNSReporter()	

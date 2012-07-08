@@ -10,6 +10,6 @@ class Log:
 
 	def write(self, msg, verbosity=1):
 		if verbosity <= CommandLine().cfg['verbosity']:
-			print "> {0}".format(msg)
+			print "{0}".format(msg)
 
 Log = Log()

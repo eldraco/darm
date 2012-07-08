@@ -6,6 +6,7 @@ try:
 except:
 	print 'This script requires pcapy. (apt-get install python-pcapy)'
 	sys.exit(-1)
+from reporters import DNSReporter
 
 class Source:
 	__unpacker = []
@@ -55,6 +56,15 @@ class Source:
 		else:
 			self.__run(reader)			
 
+	def __showSummaries(self, isPartialSummary):
+		
+			if (isPartialSummary):
+				print "Partial summary: "
+			else:
+				print "Final summary: "
+			DNSReporter().summaryReport()
+				
+
 	def __run(self, reader):			
 		dumper = None
 		if not self.dumpfile is None:
@@ -69,6 +79,8 @@ class Source:
 		lastPacketCount = 0
 		lastByteCount = 0
 		timeThreshold = 5
+		wasForcefullyInterrupted = False
+		
 		try:
 			while 1:
 				try:
@@ -94,10 +106,11 @@ class Source:
 					lastByteCount = byteCount
 
 		except KeyboardInterrupt:
-			pass
-
+			wasForcefullyInterrupted = True
+			
 		del reader
 		totalTime = time.time() - totalTime
 		print '\n%d packets analyzed in %.3f secs (%f pp)' % (packet_count, totalTime, totalTime/packet_count)
 		self.__unpacker.close()
 
+		self.__showSummaries(wasForcefullyInterrupted)

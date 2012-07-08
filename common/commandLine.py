@@ -72,7 +72,7 @@ except:
 				except:
 					self.__paramError("verbosity level must be a number")
 				else:			
-					if value<0 or value>3: self.__paramError("verbosity level must be between 0 and 3")
+					if value<0 or value>3	: self.__paramError("verbosity level must be between 0 and 3")
 					print "Verbosity set to {0}".format(value)
 					self.cfg['verbosity'] = value
 
@@ -94,7 +94,7 @@ except:
 			print "  -f               dump files transferred via HTTP to current folder"
 			print " VERBOSITY: how much detail you want about ongoing tasks."
 			print "  -a               report current computer activity in layman's terms"
-			print "  -v (level)       verbosity level number. Must be between 0 and 2. Default is 1."
+			print "  -v (level)       verbosity level number. Must be between 0 and 3. Default is 1."
 			sys.exit(-1)
 
 CommandLine = CommandLine()
