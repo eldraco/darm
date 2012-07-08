@@ -50,7 +50,7 @@ class Unpacker:
 #			print "\n"
 		else:
 			# it's a leaf (no child unpackers). in this case it outputs packet information
-			Log.write(self._packetInfo(packet), 2)
+			Log.write(self._packetInfo(packet), 3)
 			
 	def addPacket(self, packet):
 		self.process(packet)

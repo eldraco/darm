@@ -72,7 +72,7 @@ except:
 				except:
 					self.__paramError("verbosity level must be a number")
 				else:			
-					if value<0 or value>2: self.__paramError("verbosity level must be between 0 and 2")
+					if value<0 or value>3: self.__paramError("verbosity level must be between 0 and 3")
 					print "Verbosity set to {0}".format(value)
 					self.cfg['verbosity'] = value
 

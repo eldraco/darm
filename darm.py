@@ -8,8 +8,8 @@ class darm:
 	def __init__(self):
 		cfg = CommandLine().cfg
 		self.__source = Source()
-		unpackers = Unpackers().getRoot()
-		self.__source.setUnpacker(unpackers)
+		unpacker = Unpackers().getRoot()
+		self.__source.setUnpacker(unpacker)
 
 	def run(self):	
 		cfg = CommandLine().cfg

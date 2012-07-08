@@ -11,3 +11,6 @@ class Reporter:
 
 	def _validate(self):
 		return CommandLine().cfg['reporters_enabled']
+
+	def summaryReport(self):
+		return ""

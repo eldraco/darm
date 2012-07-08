@@ -9,7 +9,7 @@ class UnDNS (Unpacker):
 		self.__QTYPES = ['AXFR', 'MAILB', 'MAILA', '*']
 		self.__EXTTYPES = ['AAAA']
 		self.__CLASSES = ['IN','CS','CH','HS']
-
+		
 	def __str__(self): 
 		return "DNS unpacker"
 
